@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="COM3 (1)">
+<meta name="theme-color" content="#1D9E75">
+<link rel="apple-touch-icon" href="">
+<title>✂️ COM3 (1) – Flashcard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;min-height:100vh;color:#1a202c}
+header{background:linear-gradient(135deg,#1D9E75,#159060);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+header h1{font-size:1rem;font-weight:700}
+#install-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:5px 10px;border-radius:20px;font-size:0.75rem;cursor:pointer;display:none}
+.tabs{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;background:#fff;border-bottom:1px solid #e2e8f0;flex-shrink:0}
+.tab{padding:6px 12px;border-radius:20px;border:1px solid #cbd5e0;background:#f7fafc;font-size:0.75rem;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.stats-bar{display:flex;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid #e2e8f0;align-items:center;font-size:0.75rem;flex-wrap:wrap}
+.chip{padding:3px 10px;border-radius:12px;font-weight:600;font-size:0.72rem}
+.chip-rem{background:#d1fae5;color:#065f46}
+.chip-for{background:#fee2e2;color:#991b1b}
+.chip-left{background:#e0f2fe;color:#075985}
+.badge{background:#1D9E75;color:#fff;padding:3px 10px;border-radius:12px;font-size:0.72rem;margin-left:auto}
+#shuffle-btn{background:#f0fdf4;border:1px solid #1D9E75;color:#1D9E75;padding:3px 10px;border-radius:12px;font-size:0.72rem;cursor:pointer;margin-left:4px}
+
+/* ── CARD AREA ── */
+.card-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 12px;min-height:calc(100vh - 220px)}
+.scene{width:100%;max-width:400px;perspective:800px;cursor:pointer}
+.card{width:100%;position:relative;transform-style:preserve-3d;transition:transform .5s ease;user-select:none}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:relative;width:100%;min-height:200px;backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.12)}
+.front{background:#fff;border:2px solid #e2e8f0}
+.back{position:absolute;top:0;left:0;height:100%;background:linear-gradient(135deg,#1D9E75,#0d7a5a);color:#fff;transform:rotateY(180deg)}
+
+.word{font-size:1.5rem;font-weight:700;color:#1a202c;text-align:center;line-height:1.2}
+.pos{background:#e0f2fe;color:#075985;padding:2px 10px;border-radius:10px;font-size:0.72rem;margin:6px 0}
+.ipa{color:#718096;font-size:0.85rem;margin-bottom:6px}
+.audio-btn{background:#1D9E75;color:#fff;border:none;padding:7px 16px;border-radius:20px;font-size:0.8rem;cursor:pointer;margin-top:4px}
+.hint-btn{background:#f7fafc;color:#4a5568;border:1px solid #e2e8f0;padding:5px 12px;border-radius:20px;font-size:0.75rem;cursor:pointer;margin-top:6px}
+.svg-hint{margin-top:8px;display:none;border-radius:10px;overflow:hidden;width:100%;max-width:220px}
+.svg-hint svg{width:100%;height:auto;display:block}
+.meaning{font-size:1.2rem;font-weight:700;text-align:center;line-height:1.5;padding:0 8px}
+.flip-hint{color:rgba(255,255,255,0.7);font-size:0.72rem;margin-top:8px}
+
+/* ── NAV ── */
+.nav-row{display:flex;gap:10px;margin-top:14px;width:100%;max-width:400px;justify-content:center;align-items:center}
+.nav-btn{padding:10px 18px;border-radius:24px;border:none;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all .2s;flex:1;max-width:90px}
+.btn-prev{background:#e2e8f0;color:#4a5568}
+.btn-forget{background:#fee2e2;color:#dc2626;flex:1.2;max-width:110px}
+.btn-rem{background:#d1fae5;color:#059669;flex:1.2;max-width:110px}
+.btn-next{background:#e2e8f0;color:#4a5568}
+.progress-wrap{width:100%;max-width:400px;margin-top:12px}
+.progress-bar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#1D9E75,#38a169);border-radius:3px;transition:width .3s}
+.progress-text{text-align:center;font-size:0.72rem;color:#718096;margin-top:4px}
+
+/* ── END / VICTORY ── */
+.end-screen{display:none;flex-direction:column;align-items:center;padding:24px;text-align:center;min-height:calc(100vh - 220px)}
+.end-screen h2{font-size:1.4rem;font-weight:700;color:#1a202c;margin:12px 0 6px}
+.forget-list{width:100%;max-width:400px;background:#fff;border-radius:12px;padding:12px;margin:12px 0;text-align:left;max-height:280px;overflow-y:auto;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.forget-item{padding:6px 8px;border-bottom:1px solid #f0f4f8;font-size:0.82rem;display:flex;justify-content:space-between}
+.forget-item:last-child{border-bottom:none}
+.forget-word{font-weight:600;color:#1a202c}
+.forget-vi{color:#718096}
+.review-btn{background:#1D9E75;color:#fff;border:none;padding:12px 28px;border-radius:24px;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:8px}
+.victory{display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;min-height:calc(100vh - 220px)}
+.victory h2{font-size:1.8rem;font-weight:700;color:#1D9E75}
+.restart-btn{background:#1D9E75;color:#fff;border:none;padding:12px 28px;border-radius:24px;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:16px}
+
+/* ── iOS MODAL ── */
+.ios-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:flex-end;justify-content:center}
+.ios-modal.show{display:flex}
+.ios-box{background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px}
+.ios-box h3{font-size:1rem;font-weight:700;margin-bottom:12px}
+.ios-step{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:0.85rem;color:#4a5568}
+.ios-close{background:#f0f4f8;border:none;padding:10px;border-radius:12px;width:100%;margin-top:14px;cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>✂️ COM3 (1) – Flashcard</h1>
+  <button id="install-btn" onclick="handleInstall()">📲 Cài App</button>
+</header>
+<div class="tabs" id="tabs"></div>
+<div class="stats-bar">
+  <span class="chip chip-rem">✓ Nhớ: <span id="cnt-rem">0</span></span>
+  <span class="chip chip-for">✗ Quên: <span id="cnt-for">0</span></span>
+  <span class="chip chip-left">◎ Còn: <span id="cnt-left">0</span></span>
+  <span class="badge" id="round-badge">Vòng 1</span>
+  <button id="shuffle-btn" onclick="shuffleDeck()">🔀 Shuffle</button>
+</div>
+
+<div class="card-area" id="card-area">
+  <div class="scene" onclick="flipCard()">
+    <div class="card" id="the-card">
+      <div class="face front" id="front-face">
+        <div class="word" id="fc-w"></div>
+        <span class="pos" id="fc-pos"></span>
+        <div class="ipa" id="fc-ipa"></div>
+        <button class="audio-btn" onclick="fcPlayAudio(event)">🔊 Nghe</button>
+        <button class="hint-btn" onclick="toggleHint(event)">🖼️ Xem hình gợi ý</button>
+        <div class="svg-hint" id="svg-hint"></div>
+      </div>
+      <div class="face back">
+        <div class="meaning" id="fc-vi"></div>
+        <div class="flip-hint">👆 Nhấn để lật lại</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="nav-btn btn-prev" onclick="goPrev()">← Prev</button>
+    <button class="nav-btn btn-forget" onclick="markForget()">😕 Quên</button>
+    <button class="nav-btn btn-rem" onclick="markRemember()">✓ Nhớ</button>
+    <button class="nav-btn btn-next" onclick="goNext()">Next →</button>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-text" id="prog-text"></div>
+  </div>
+</div>
+
+<div class="end-screen" id="end-screen">
+  <div style="font-size:3rem">😕</div>
+  <h2>Còn <span id="forget-count">0</span> từ chưa nhớ</h2>
+  <p style="color:#718096;font-size:0.85rem;margin-bottom:4px">Hãy ôn lại những từ này:</p>
+  <div class="forget-list" id="forget-list"></div>
+  <button class="review-btn" onclick="reviewForget()">🔁 Ôn lại ngay</button>
+</div>
+
+<div class="victory" id="victory">
+  <div style="font-size:4rem">🏆</div>
+  <h2>Xuất sắc!</h2>
+  <p style="color:#718096;margin-top:8px">Bạn đã nhớ tất cả từ vựng!</p>
+  <button class="restart-btn" onclick="restart()">🔄 Làm lại từ đầu</button>
+</div>
+
+<div class="ios-modal" id="ios-modal">
+  <div class="ios-box">
+    <h3>📲 Cài app lên iPhone</h3>
+    <div class="ios-step">1️⃣ Nhấn nút <strong>Chia sẻ ⎙</strong> ở Safari</div>
+    <div class="ios-step">2️⃣ Chọn <strong>Thêm vào Màn hình chính</strong></div>
+    <div class="ios-step">3️⃣ Nhấn <strong>Thêm</strong> → App xuất hiện!</div>
+    <button class="ios-close" onclick="document.getElementById('ios-modal').classList.remove('show')">Đóng</button>
+  </div>
+</div>
+
+<script>
+const ALL_WORDS = [
+  // ── Hair / Appearance ──
+  {w:"fade",pos:"v.",ipa:"/feɪd/",vi:"phai màu / mờ dần",group:"Hair & Body",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fef9c3"/><text x="50%" y="40" text-anchor="middle" font-size="30">🎨</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#713f12" font-family="sans-serif">Color fades over time</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#a16207" font-family="sans-serif">→ phai màu</text></svg>`},
+  {w:"faded",pos:"adj.",ipa:"/ˈfeɪdɪd/",vi:"đã phai / nhạt màu",group:"Hair & Body",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#f3f4f6"/><text x="50%" y="40" text-anchor="middle" font-size="30">👕</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#4b5563" font-family="sans-serif">Faded shirt color</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#6b7280" font-family="sans-serif">nhạt màu</text></svg>`},
+  {w:"dye",pos:"v./n.",ipa:"/daɪ/",vi:"nhuộm / thuốc nhuộm",group:"Hair & Body",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fdf4ff"/><text x="50%" y="40" text-anchor="middle" font-size="30">💇</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#7c3aed" font-family="sans-serif">Dye your hair red</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#6d28d9" font-family="sans-serif">nhuộm tóc</text></svg>`},
+  {w:"separately",pos:"adv.",ipa:"/ˈsɛprətli/",vi:"riêng lẻ, tách biệt",group:"Core Vocab",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#e0f2fe"/><text x="30%" y="55" text-anchor="middle" font-size="28">🔵</text><text x="70%" y="55" text-anchor="middle" font-size="28">🟠</text><text x="50%" y="85" text-anchor="middle" font-size="12" fill="#075985" font-family="sans-serif">Wash separately</text></svg>`},
+  // ── Health ──
+  {w:"blood",pos:"n.",ipa:"/blʌd/",vi:"máu",group:"Health",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fee2e2"/><text x="50%" y="40" text-anchor="middle" font-size="30">🩸</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#991b1b" font-family="sans-serif">Blood test</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#b91c1c" font-family="sans-serif">máu</text></svg>`},
+  {w:"obesity",pos:"n.",ipa:"/əˈbiːsɪti/",vi:"béo phì",group:"Health",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fff7ed"/><text x="50%" y="40" text-anchor="middle" font-size="30">⚕️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#92400e" font-family="sans-serif">Patients with obesity</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#b45309" font-family="sans-serif">béo phì</text></svg>`},
+  {w:"symptom",pos:"n.",ipa:"/ˈsɪmptəm/",vi:"triệu chứng",group:"Health",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fff1f2"/><text x="50%" y="40" text-anchor="middle" font-size="30">🤒</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#9f1239" font-family="sans-serif">Common symptoms</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#be123c" font-family="sans-serif">triệu chứng</text></svg>`},
+  {w:"system",pos:"n.",ipa:"/ˈsɪstəm/",vi:"hệ thống",group:"Health",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#e0f2fe"/><text x="50%" y="40" text-anchor="middle" font-size="30">⚙️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#075985" font-family="sans-serif">Nervous system</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#0369a1" font-family="sans-serif">hệ thống</text></svg>`},
+  {w:"purple",pos:"adj./n.",ipa:"/ˈpɜːrpəl/",vi:"màu tím / tím bầm",group:"Hair & Body",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#ede9fe"/><rect x="60" y="25" width="80" height="45" rx="10" fill="#7c3aed"/><text x="50%" y="88" text-anchor="middle" font-size="12" fill="#5b21b6" font-family="sans-serif">Skin turns purple</text></svg>`},
+  {w:"bruise",pos:"n./v.",ipa:"/bruːz/",vi:"vết bầm / bị bầm tím",group:"Hair & Body",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fdf4ff"/><text x="50%" y="40" text-anchor="middle" font-size="30">🤕</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#7c3aed" font-family="sans-serif">Hit hard → bruise</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#6d28d9" font-family="sans-serif">vết bầm</text></svg>`},
+  {w:"joint",pos:"n.",ipa:"/dʒɔɪnt/",vi:"khớp xương",group:"Health",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#f0fdf4"/><text x="50%" y="40" text-anchor="middle" font-size="30">🦴</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#166534" font-family="sans-serif">Joint and bone pain</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#15803d" font-family="sans-serif">khớp xương</text></svg>`},
+  {w:"cramp",pos:"n.",ipa:"/kræmp/",vi:"chuột rút",group:"Health",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fff1f2"/><text x="50%" y="40" text-anchor="middle" font-size="30">🦵</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#9f1239" font-family="sans-serif">Leg cramp!</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#be123c" font-family="sans-serif">chuột rút</text></svg>`},
+  {w:"itchy",pos:"adj.",ipa:"/ˈɪtʃi/",vi:"ngứa",group:"Hair & Body",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fef9c3"/><text x="50%" y="40" text-anchor="middle" font-size="30">🐛</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#713f12" font-family="sans-serif">Feel itchy → scratch</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#92400e" font-family="sans-serif">ngứa</text></svg>`},
+  {w:"scratch",pos:"v.",ipa:"/skrætʃ/",vi:"gãi / cào",group:"Hair & Body",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fff7ed"/><text x="50%" y="40" text-anchor="middle" font-size="30">🖐️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#92400e" font-family="sans-serif">Scratch the itch</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#b45309" font-family="sans-serif">gãi / cào</text></svg>`},
+  // ── Body & Action ──
+  {w:"lift weight",pos:"v. phr.",ipa:"/lɪft weɪt/",vi:"tập tạ / nâng tạ",group:"Body & Action",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#d1fae5"/><text x="50%" y="40" text-anchor="middle" font-size="30">🏋️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#065f46" font-family="sans-serif">Lift weights daily</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#047857" font-family="sans-serif">tập tạ</text></svg>`},
+  {w:"poke through",pos:"v. phr.",ipa:"/pəʊk θruː/",vi:"chọc xuyên qua",group:"Body & Action",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fef3c7"/><text x="50%" y="40" text-anchor="middle" font-size="30">👉</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#92400e" font-family="sans-serif">Poke through the hole</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#b45309" font-family="sans-serif">chọc xuyên qua</text></svg>`},
+  {w:"stay still",pos:"v. phr.",ipa:"/steɪ stɪl/",vi:"đứng yên / không cử động",group:"Body & Action",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#e0f2fe"/><text x="50%" y="40" text-anchor="middle" font-size="30">🧍</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#075985" font-family="sans-serif">Stay still, don't move!</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#0369a1" font-family="sans-serif">đứng yên</text></svg>`},
+  {w:"occupy",pos:"v.",ipa:"/ˈɒkjʊpaɪ/",vi:"chiếm (không gian)",group:"Body & Action",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#f0fdf4"/><text x="50%" y="40" text-anchor="middle" font-size="30">🪑</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#166534" font-family="sans-serif">Occupies much space</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#15803d" font-family="sans-serif">chiếm không gian</text></svg>`},
+  {w:"stand straight",pos:"v. phr.",ipa:"/stænd streɪt/",vi:"đứng thẳng",group:"Body & Action",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#e0f2fe"/><text x="50%" y="40" text-anchor="middle" font-size="30">🧍</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#075985" font-family="sans-serif">Please stand straight!</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#0369a1" font-family="sans-serif">đứng thẳng</text></svg>`},
+  // ── Posture / Position ──
+  {w:"lean toward",pos:"v. phr.",ipa:"/liːn təˈwɔːd/",vi:"nghiêng / hướng về phía",group:"Posture",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fdf4ff"/><text x="50%" y="40" text-anchor="middle" font-size="30">↗️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#7c3aed" font-family="sans-serif">Lean toward the screen</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#6d28d9" font-family="sans-serif">nghiêng về phía</text></svg>`},
+  {w:"lean on",pos:"v. phr.",ipa:"/liːn ɒn/",vi:"tựa vào / dựa vào",group:"Posture",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fdf4ff"/><text x="50%" y="40" text-anchor="middle" font-size="30">🏗️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#7c3aed" font-family="sans-serif">Lean on the railing</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#6d28d9" font-family="sans-serif">tựa vào</text></svg>`},
+  {w:"lean against",pos:"v. phr.",ipa:"/liːn əˈɡɛnst/",vi:"dựa lưng vào",group:"Posture",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fdf4ff"/><text x="50%" y="40" text-anchor="middle" font-size="30">🧱</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#7c3aed" font-family="sans-serif">Lean against the wall</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#6d28d9" font-family="sans-serif">dựa lưng vào tường</text></svg>`},
+  // ── Communication ──
+  {w:"express",pos:"v.",ipa:"/ɪkˈsprɛs/",vi:"thể hiện / bày tỏ",group:"Communication",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#d1fae5"/><text x="50%" y="40" text-anchor="middle" font-size="30">💬</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#065f46" font-family="sans-serif">Express your feelings</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#047857" font-family="sans-serif">thể hiện / bày tỏ</text></svg>`},
+  {w:"confess",pos:"v.",ipa:"/kənˈfɛs/",vi:"thú nhận / thú tội",group:"Communication",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fff1f2"/><text x="50%" y="40" text-anchor="middle" font-size="30">🙏</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#9f1239" font-family="sans-serif">Confess the truth</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#be123c" font-family="sans-serif">thú nhận</text></svg>`},
+  {w:"manner",pos:"n.",ipa:"/ˈmænər/",vi:"phong thái / cách cư xử",group:"Communication",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fef9c3"/><text x="50%" y="40" text-anchor="middle" font-size="30">🎩</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#713f12" font-family="sans-serif">In a lovely manner</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#92400e" font-family="sans-serif">phong thái</text></svg>`},
+  {w:"foreigner",pos:"n.",ipa:"/ˈfɒrənər/",vi:"người nước ngoài",group:"Communication",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#e0f2fe"/><text x="50%" y="40" text-anchor="middle" font-size="30">🌍</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#075985" font-family="sans-serif">A foreigner in the city</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#0369a1" font-family="sans-serif">người nước ngoài</text></svg>`},
+  {w:"well-behaved",pos:"adj.",ipa:"/ˌwɛl bɪˈheɪvd/",vi:"cư xử tốt / ngoan",group:"Communication",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#d1fae5"/><text x="50%" y="40" text-anchor="middle" font-size="30">😇</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#065f46" font-family="sans-serif">A well-behaved child</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#047857" font-family="sans-serif">cư xử tốt</text></svg>`},
+  {w:"nonsense",pos:"n.",ipa:"/ˈnɒnsəns/",vi:"vô nghĩa / nhảm nhí",group:"Communication",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fef9c3"/><text x="50%" y="40" text-anchor="middle" font-size="30">🤡</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#713f12" font-family="sans-serif">That's nonsense!</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#92400e" font-family="sans-serif">vô nghĩa</text></svg>`},
+  // ── Emotion ──
+  {w:"irritated",pos:"adj.",ipa:"/ˈɪrɪteɪtɪd/",vi:"bực bội / khó chịu",group:"Emotion",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fee2e2"/><text x="50%" y="40" text-anchor="middle" font-size="30">😤</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#991b1b" font-family="sans-serif">Feeling irritated</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#b91c1c" font-family="sans-serif">bực bội</text></svg>`},
+  {w:"discharge",pos:"v.",ipa:"/dɪsˈtʃɑːrdʒ/",vi:"xả ra / giải phóng (cảm xúc)",group:"Emotion",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fff7ed"/><text x="50%" y="40" text-anchor="middle" font-size="30">💢</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#92400e" font-family="sans-serif">Discharge your anger</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#b45309" font-family="sans-serif">xả cảm xúc</text></svg>`},
+  {w:"self-controlled",pos:"adj.",ipa:"/ˌsɛlf kənˈtrəʊld/",vi:"tự kiểm soát bản thân",group:"Emotion",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#d1fae5"/><text x="50%" y="40" text-anchor="middle" font-size="30">🧘</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#065f46" font-family="sans-serif">Stay self-controlled</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#047857" font-family="sans-serif">tự kiểm soát</text></svg>`},
+  // ── Nature / Poetry ──
+  {w:"grain of sand",pos:"n. phr.",ipa:"/ɡreɪn əv sænd/",vi:"hạt cát",group:"Nature & Poetry",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fef9c3"/><text x="50%" y="40" text-anchor="middle" font-size="30">🏜️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#713f12" font-family="sans-serif">A grain of sand</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#92400e" font-family="sans-serif">hạt cát</text></svg>`},
+  {w:"droplet",pos:"n.",ipa:"/ˈdrɒplɪt/",vi:"giọt nhỏ (nước mưa)",group:"Nature & Poetry",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#e0f2fe"/><text x="50%" y="40" text-anchor="middle" font-size="30">🌧️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#075985" font-family="sans-serif">Raindrops / droplets</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#0369a1" font-family="sans-serif">giọt mưa</text></svg>`},
+  {w:"randomly",pos:"adv.",ipa:"/ˈrændəmli/",vi:"một cách ngẫu nhiên",group:"Nature & Poetry",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#ede9fe"/><text x="50%" y="40" text-anchor="middle" font-size="30">🎲</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#5b21b6" font-family="sans-serif">Not randomly placed</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#6d28d9" font-family="sans-serif">ngẫu nhiên</text></svg>`},
+  // ── Core Vocab ──
+  {w:"interruption",pos:"n.",ipa:"/ˌɪntəˈrʌpʃən/",vi:"sự gián đoạn",group:"Core Vocab",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fee2e2"/><text x="50%" y="40" text-anchor="middle" font-size="30">📶</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#991b1b" font-family="sans-serif">Internet interruption</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#b91c1c" font-family="sans-serif">gián đoạn</text></svg>`},
+  {w:"be charged",pos:"v. phr.",ipa:"/biː tʃɑːrdʒd/",vi:"bị buộc tội / bị truy tố",group:"Core Vocab",
+   svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110"><rect width="200" height="110" rx="10" fill="#fff1f2"/><text x="50%" y="40" text-anchor="middle" font-size="30">⚖️</text><text x="50%" y="72" text-anchor="middle" font-size="12" fill="#9f1239" font-family="sans-serif">He was charged</text><text x="50%" y="90" text-anchor="middle" font-size="11" fill="#be123c" font-family="sans-serif">bị buộc tội</text></svg>`},
+];
+
+const GROUPS = ['Tất cả', ...new Set(ALL_WORDS.map(w => w.group))];
+let currentGroup = 'Tất cả';
+let deck = [], forgotten = [], remembered = [], round = 1, idx = 0;
+let deferInstall = null;
+
+function getFiltered() {
+  return currentGroup === 'Tất cả' ? [...ALL_WORDS] : ALL_WORDS.filter(w => w.group === currentGroup);
+}
+function buildTabs() {
+  document.getElementById('tabs').innerHTML = GROUPS.map(g =>
+    `<button class="tab${g===currentGroup?' active':''}" onclick="setGroup('${g}')">${g}</button>`
+  ).join('');
+}
+function setGroup(g) { currentGroup=g; buildTabs(); restart(); }
+
+function start() {
+  deck=getFiltered(); forgotten=[]; remembered=[]; round=1; idx=0;
+  renderCard(); updateStats();
+  document.getElementById('card-area').style.display='flex';
+  document.getElementById('end-screen').style.display='none';
+  document.getElementById('victory').style.display='none';
+}
+function restart() { start(); }
+
+function renderCard() {
+  if (!deck.length) { showEnd(); return; }
+  const c = deck[idx];
+  document.getElementById('fc-w').textContent = c.w;
+  document.getElementById('fc-pos').textContent = c.pos;
+  document.getElementById('fc-ipa').textContent = c.ipa;
+  document.getElementById('fc-vi').textContent = c.vi;
+  const sh = document.getElementById('svg-hint');
+  sh.innerHTML = c.svg || '';
+  sh.style.display = 'none';
+  document.getElementById('the-card').classList.remove('flipped');
+  updateProgress();
+}
+function flipCard() { document.getElementById('the-card').classList.toggle('flipped'); }
+function fcPlayAudio(e) {
+  e.stopPropagation();
+  const u = new SpeechSynthesisUtterance(document.getElementById('fc-w').textContent);
+  u.lang='en-US'; u.rate=0.85;
+  window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+}
+function toggleHint(e) {
+  e.stopPropagation();
+  const h = document.getElementById('svg-hint');
+  h.style.display = h.style.display==='none' ? 'block' : 'none';
+}
+function markRemember() {
+  if (!deck.length) return;
+  remembered.push(deck[idx]);
+  deck.splice(idx, 1);
+  if (idx >= deck.length) idx = Math.max(0, deck.length-1);
+  if (!deck.length) { showEnd(); return; }
+  renderCard(); updateStats();
+}
+function markForget() {
+  if (!deck.length) return;
+  if (!forgotten.find(x=>x.w===deck[idx].w)) forgotten.push(deck[idx]);
+  idx = (idx+1) % deck.length;
+  renderCard(); updateStats();
+}
+function goNext() { if (!deck.length) return; idx=(idx+1)%deck.length; renderCard(); }
+function goPrev() { if (!deck.length) return; idx=(idx-1+deck.length)%deck.length; renderCard(); }
+function shuffleDeck() {
+  for (let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+  idx=0; renderCard();
+}
+function updateStats() {
+  document.getElementById('cnt-rem').textContent = remembered.length;
+  document.getElementById('cnt-for').textContent = forgotten.length;
+  document.getElementById('cnt-left').textContent = deck.length;
+  document.getElementById('round-badge').textContent = round===1 ? 'Vòng 1' : `🔁 Ôn lại: Vòng ${round}`;
+}
+function updateProgress() {
+  const total = deck.length + remembered.length;
+  const pct = total ? Math.round(remembered.length/total*100) : 0;
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-text').textContent = `${remembered.length}/${total} từ đã nhớ (${pct}%)`;
+}
+function showEnd() {
+  if (!forgotten.length) { showVictory(); return; }
+  document.getElementById('card-area').style.display='none';
+  document.getElementById('end-screen').style.display='flex';
+  document.getElementById('forget-count').textContent = forgotten.length;
+  document.getElementById('forget-list').innerHTML = forgotten.map(f =>
+    `<div class="forget-item"><span class="forget-word">${f.w} <span style="font-weight:400;color:#718096;font-size:0.75rem">${f.pos}</span></span><span class="forget-vi">${f.vi}</span></div>`
+  ).join('');
+}
+function showVictory() {
+  document.getElementById('card-area').style.display='none';
+  document.getElementById('end-screen').style.display='none';
+  document.getElementById('victory').style.display='flex';
+}
+function reviewForget() {
+  deck=[...forgotten]; forgotten=[]; remembered=[]; idx=0; round++;
+  document.getElementById('card-area').style.display='flex';
+  document.getElementById('end-screen').style.display='none';
+  renderCard(); updateStats();
+}
+
+// PWA
+const PWA_NAME="COM3 (1) – Flashcard", PWA_SHORT="COM3 (1)", PWA_EMOJI="✂️", PWA_COLOR="#1D9E75";
+function genIcon(s){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><rect width="${s}" height="${s}" rx="${s*.22}" fill="${PWA_COLOR}"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="${s*.45}">${PWA_EMOJI}</text><text x="50%" y="82%" text-anchor="middle" font-size="${s*.11}" font-family="sans-serif" fill="rgba(255,255,255,0.9)" font-weight="bold">${PWA_SHORT}</text></svg>`;return 'data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));}
+function injectManifest(){const m={name:PWA_NAME,short_name:PWA_SHORT,description:'Flashcard tiếng Anh giao tiếp',start_url:'./',display:'standalone',background_color:'#f0f4f8',theme_color:PWA_COLOR,orientation:'portrait',icons:[{src:genIcon(192),sizes:'192x192',type:'image/svg+xml',purpose:'any maskable'},{src:genIcon(512),sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}]};const b=new Blob([JSON.stringify(m)],{type:'application/json'});const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(b);document.head.appendChild(l);document.querySelector('link[rel="apple-touch-icon"]').href=genIcon(180);}
+function registerSW(){if(!('serviceWorker' in navigator))return;const c=`const CACHE='vocab-v1';self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('./'))));});`;const b=new Blob([c],{type:'application/javascript'});navigator.serviceWorker.register(URL.createObjectURL(b)).catch(()=>{});}
+function handleInstall(){if(deferInstall){deferInstall.prompt();}else if(/iPhone|iPad|iPod/.test(navigator.userAgent)){document.getElementById('ios-modal').classList.add('show');}}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferInstall=e;document.getElementById('install-btn').style.display='block';});
+window.addEventListener('appinstalled',()=>{document.getElementById('install-btn').style.display='none';});
+
+document.addEventListener('DOMContentLoaded',()=>{
+  injectManifest(); registerSW(); buildTabs(); start();
+  if(/iPhone|iPad|iPod/.test(navigator.userAgent)&&!window.navigator.standalone){document.getElementById('install-btn').style.display='block';}
+});
+</script>
+</body>
+</html>
